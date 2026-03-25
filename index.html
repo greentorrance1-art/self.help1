@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Self Review OS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <div class="topbar-date" id="top-date">—</div>
+    <div class="topbar-name">Hey, Torrance 👋</div>
+  </div>
+  <div class="streak-badge">🔥 <span id="top-streak">0</span> days</div>
+</div>
+
+<!-- ═══════════════════════════════════
+     PAGE: TODAY
+═══════════════════════════════════ -->
+<div class="page active" id="page-today">
+  <div class="page-scroll">
+    <div class="today-hero">
+      <div class="today-score-label">Today's Score</div>
+      <div class="today-score" id="hero-score">--</div>
+      <div class="today-score-sub">out of 100 · <span id="hero-date">--</span></div>
+    </div>
+    <div class="section-label">Quick Log</div>
+    <div class="quick-strip">
+      <button class="ql-chip" onclick="openModal('modal-workout')"><span class="ql-chip-icon">💪</span><span class="ql-chip-label">Workout</span></button>
+      <button class="ql-chip" onclick="openModal('modal-weed')"><span class="ql-chip-icon">🌿</span><span class="ql-chip-label">Weed</span></button>
+      <button class="ql-chip" onclick="openModal('modal-meal')"><span class="ql-chip-icon">🍽</span><span class="ql-chip-label">Meal</span></button>
+      <button class="ql-chip" onclick="openModal('modal-water')"><span class="ql-chip-icon">💧</span><span class="ql-chip-label">Water</span></button>
+      <button class="ql-chip" onclick="openModal('modal-sleep')"><span class="ql-chip-icon">😴</span><span class="ql-chip-label">Sleep</span></button>
+      <button class="ql-chip" onclick="openModal('modal-weight')"><span class="ql-chip-icon">⚖️</span><span class="ql-chip-label">Weight</span></button>
+    </div>
+    <div class="today-grid">
+      <div class="today-stat"><div class="today-stat-val" id="stat-workout">—</div><div class="today-stat-label">Workout</div></div>
+      <div class="today-stat"><div class="today-stat-val" id="stat-weed">—</div><div class="today-stat-label">Weed sessions</div></div>
+      <div class="today-stat"><div class="today-stat-val" id="stat-meals">—</div><div class="today-stat-label">Meals logged</div></div>
+      <div class="today-stat"><div class="today-stat-val" id="stat-sleep">—</div><div class="today-stat-label">Sleep hrs</div></div>
+    </div>
+    <div class="section-label">Today's Non-Negotiables</div>
+    <div class="card"><div id="daily-checklist"></div></div>
+    <div class="section-label">Today's Balance</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div class="card-flat" style="border-left:3px solid var(--green)">
+        <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;color:var(--green);margin-bottom:8px">▲ BUILT ME</div>
+        <div id="bmt-built" style="font-size:13px;color:var(--ink-2);line-height:1.8"></div>
+      </div>
+      <div class="card-flat" style="border-left:3px solid var(--red)">
+        <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;color:var(--red);margin-bottom:8px">▼ TOOK FROM</div>
+        <div id="bmt-took" style="font-size:13px;color:var(--ink-2);line-height:1.8"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     PAGE: LOG
+═══════════════════════════════════ -->
+<div class="page" id="page-log">
+  <div class="page-scroll">
+    <h1 style="margin-bottom:16px">Activity Log</h1>
+    <div style="display:flex;gap:8px;margin-bottom:16px;overflow-x:auto;-ms-overflow-style:none;scrollbar-width:none">
+      <button class="pill pill-gray" style="cursor:pointer;border:none;font-size:12px;flex-shrink:0" onclick="filterLog('all',this)">All</button>
+      <button class="pill pill-green" style="cursor:pointer;border:none;font-size:12px;flex-shrink:0" onclick="filterLog('workout',this)">💪 Workout</button>
+      <button class="pill pill-purple" style="cursor:pointer;border:none;font-size:12px;flex-shrink:0" onclick="filterLog('weed',this)">🌿 Weed</button>
+      <button class="pill pill-amber" style="cursor:pointer;border:none;font-size:12px;flex-shrink:0" onclick="filterLog('meal',this)">🍽 Meal</button>
+    </div>
+    <div id="log-content"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     PAGE: DASHBOARD
+═══════════════════════════════════ -->
+<div class="page" id="page-dashboard">
+  <div class="page-scroll">
+    <h1 style="margin-bottom:4px">Dashboard</h1>
+    <div style="font-size:13px;color:var(--gray-5);margin-bottom:14px">Performance analytics & insights</div>
+    <div class="dash-filter-row">
+      <button class="dash-filter-btn active" onclick="setDashRange(7,this)">7 days</button>
+      <button class="dash-filter-btn" onclick="setDashRange(30,this)">30 days</button>
+      <button class="dash-filter-btn" onclick="setDashRange(90,this)">90 days</button>
+    </div>
+    <div class="section-label">Performance KPIs</div>
+    <div class="dash-kpi-row">
+      <div class="dash-kpi green"><div class="dash-kpi-val" id="kpi-avg-score">—</div><div class="dash-kpi-label">Avg Discipline Score</div><div class="dash-kpi-sub" id="kpi-avg-score-sub">—</div></div>
+      <div class="dash-kpi blue"><div class="dash-kpi-val" id="kpi-consistency">—</div><div class="dash-kpi-label">Consistency Rate</div><div class="dash-kpi-sub" id="kpi-consistency-sub">days scored 60+</div></div>
+    </div>
+    <div class="dash-kpi-row">
+      <div class="dash-kpi amber"><div class="dash-kpi-val" id="kpi-workouts">—</div><div class="dash-kpi-label">Workouts Logged</div><div class="dash-kpi-sub" id="kpi-workouts-sub">—</div></div>
+      <div class="dash-kpi purple"><div class="dash-kpi-val" id="kpi-weed-avg">—</div><div class="dash-kpi-label">Weed Avg / Day</div><div class="dash-kpi-sub" id="kpi-weed-sub">sessions</div></div>
+    </div>
+    <div class="dash-kpi-row">
+      <div class="dash-kpi green"><div class="dash-kpi-val" id="kpi-bw-current">—</div><div class="dash-kpi-label">Current Weight</div><div class="dash-kpi-sub" id="kpi-bw-change">vs start</div></div>
+      <div class="dash-kpi red"><div class="dash-kpi-val" id="kpi-sleep-avg">—</div><div class="dash-kpi-label">Avg Sleep</div><div class="dash-kpi-sub">hours/night</div></div>
+    </div>
+    <div class="section-label">Discipline Trend</div>
+    <div class="chart-card">
+      <div class="chart-title" id="disc-chart-title">Last 7 Days</div>
+      <div class="chart-sub">Daily discipline score</div>
+      <div class="chart-wrap" style="height:180px"><canvas id="chart-discipline"></canvas></div>
+    </div>
+    <div class="section-label">Workout Frequency</div>
+    <div class="chart-card">
+      <div class="chart-title">Training Activity</div>
+      <div class="chart-sub">Sessions & duration</div>
+      <div class="chart-wrap" style="height:150px"><canvas id="chart-workouts"></canvas></div>
+    </div>
+    <div class="section-label">Weed & Sleep</div>
+    <div class="chart-card">
+      <div class="chart-title">Intake Trends</div>
+      <div class="chart-sub">Weed sessions vs sleep hours</div>
+      <div class="chart-wrap" style="height:150px"><canvas id="chart-weed-sleep"></canvas></div>
+    </div>
+    <div class="section-label">Bodyweight Trend</div>
+    <div class="chart-card">
+      <div class="chart-title">Gains Tracker</div>
+      <div class="chart-sub" id="bw-chart-sub">Weekly weigh-ins</div>
+      <div class="chart-wrap" style="height:150px"><canvas id="chart-bodyweight"></canvas></div>
+      <div style="margin-top:12px" id="bw-stats-row"></div>
+    </div>
+    <div class="section-label">Meal Quality</div>
+    <div class="chart-card">
+      <div class="chart-title">Food Breakdown</div>
+      <div class="chart-wrap" style="height:130px"><canvas id="chart-meals"></canvas></div>
+    </div>
+    <div class="section-label">Correlation Insights</div>
+    <div id="insight-cards"></div>
+    <div class="section-label">Movement Overview</div>
+    <div class="card" id="movement-overview"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     PAGE: CALENDAR
+═══════════════════════════════════ -->
+<div class="page" id="page-calendar">
+  <div class="page-scroll">
+    <h1 style="margin-bottom:16px">Calendar</h1>
+    <div class="card-dark" style="margin-bottom:16px">
+      <div style="font-size:11px;font-weight:700;letter-spacing:0.1em;opacity:0.6;margin-bottom:4px">MONTHLY GOAL</div>
+      <div style="font-family:'DM Serif Display',serif;font-size:20px;margin-bottom:10px"><span id="cal-hit-days">0</span> / <span id="cal-total-days">30</span> days hit</div>
+      <div style="height:6px;background:rgba(255,255,255,0.15);border-radius:99px;overflow:hidden">
+        <div id="cal-progress-bar" style="height:100%;background:#fff;border-radius:99px;width:0%;transition:width 0.6s ease"></div>
+      </div>
+    </div>
+    <div class="section-label">Monthly Targets</div>
+    <div class="goal-card">
+      <div class="goal-card-top"><div class="goal-card-title">💪 Workouts</div><div class="goal-streak" id="goal-workouts">0</div></div>
+      <div class="goal-bar-bg"><div class="goal-bar-fill" id="bar-workouts" style="background:var(--green);width:0%"></div></div>
+      <div class="goal-stats">
+        <div class="goal-stat-item"><div class="goal-stat-num" id="gn-workouts">0</div><div class="goal-stat-label">This month</div></div>
+        <div class="goal-stat-item"><div class="goal-stat-num" id="gn-workouts-target">20</div><div class="goal-stat-label">Target</div></div>
+        <div class="goal-stat-item"><div class="goal-stat-num" id="gn-workouts-left">20</div><div class="goal-stat-label">Remaining</div></div>
+      </div>
+    </div>
+    <div class="goal-card">
+      <div class="goal-card-top"><div class="goal-card-title">🌿 Weed Control</div><div class="goal-streak" id="goal-weed-ctrl" style="color:var(--amber)">0/30</div></div>
+      <div class="goal-bar-bg"><div class="goal-bar-fill" id="bar-weed" style="background:var(--amber);width:0%"></div></div>
+      <div class="goal-stats">
+        <div class="goal-stat-item"><div class="goal-stat-num" id="gn-weed-ok">0</div><div class="goal-stat-label">Under target</div></div>
+        <div class="goal-stat-item"><div class="goal-stat-num" id="gn-weed-over">0</div><div class="goal-stat-label">Over target</div></div>
+        <div class="goal-stat-item"><div class="goal-stat-num" id="gn-weed-target-label">1</div><div class="goal-stat-label">Daily target</div></div>
+      </div>
+    </div>
+    <div class="goal-card">
+      <div class="goal-card-top"><div class="goal-card-title">🔒 Control Streak</div><div class="goal-streak" id="goal-control-streak">0 days</div></div>
+      <div class="goal-bar-bg"><div class="goal-bar-fill" id="bar-control" style="background:var(--blue);width:0%"></div></div>
+      <div class="goal-stats">
+        <div class="goal-stat-item"><div class="goal-stat-num" id="gn-ctrl-wins">0</div><div class="goal-stat-label">Clean days</div></div>
+        <div class="goal-stat-item"><div class="goal-stat-num" id="gn-ctrl-aware">0</div><div class="goal-stat-label">Aware</div></div>
+        <div class="goal-stat-item"><div class="goal-stat-num" id="gn-ctrl-loss">0</div><div class="goal-stat-label">Gave in</div></div>
+      </div>
+    </div>
+    <div class="spacer"></div>
+    <div class="card">
+      <div class="cal-header">
+        <button class="cal-nav" onclick="calNav(-1)">‹</button>
+        <div class="cal-month" id="cal-month-label">—</div>
+        <button class="cal-nav" onclick="calNav(1)">›</button>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+      <div class="cal-legend">
+        <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--green-bg);border:1.5px solid var(--green)"></div>Won</div>
+        <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--amber-bg);border:1.5px solid var(--amber)"></div>Partial</div>
+        <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--red-bg);border:1.5px solid var(--red)"></div>Slipped</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     PAGE: CONTROL
+═══════════════════════════════════ -->
+<div class="page" id="page-control">
+  <div class="page-scroll">
+    <div class="mantra-box" onclick="editMantra()">
+      <div class="mantra-label">Daily Mantra · Tap to edit</div>
+      <div class="mantra-text" id="mantra-display">I don't obey urges — I observe them until they pass.</div>
+    </div>
+    <div class="control-tracker-head">
+      <div class="control-month-label" id="ctrl-month">—</div>
+      <button class="btn btn-sm btn-outline" onclick="openModal('modal-ctrl-settings')">Edit Categories</button>
+    </div>
+    <div id="control-categories"></div>
+    <div class="card-flat" style="border-left:3px solid var(--blue)">
+      <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;color:var(--blue);margin-bottom:10px">RULES</div>
+      <div style="font-size:13px;color:var(--ink-2);line-height:1.9">
+        ✓ = kept control &nbsp; ✗ = gave in &nbsp; ⚠ = urge hit, paused, redirected<br>
+        <strong>⚠ counts as growth.</strong> Never erase. Never restart. The goal is longer gaps, not perfection.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     PAGE: JOURNAL
+═══════════════════════════════════ -->
+<div class="page" id="page-journal">
+  <div class="page-scroll">
+    <h1 style="margin-bottom:4px">Journal</h1>
+    <div style="font-size:13px;color:var(--gray-5);margin-bottom:16px">Weekly reflections you can look back on</div>
+    <div class="section-label">New Weekly Review</div>
+    <div class="card" style="margin-bottom:16px">
+      <div class="form-group"><label class="form-label">Week of</label><input type="date" class="form-input" id="reflect-date"></div>
+      <div class="form-group"><label class="form-label">▲ What was strongest?</label><textarea class="form-textarea" id="reflect-strong" placeholder="Training, control, meals, mindset..."></textarea></div>
+      <div class="form-group"><label class="form-label">▼ Where did I slip?</label><textarea class="form-textarea" id="reflect-slip" placeholder="Be honest. This is data, not verdict."></textarea></div>
+      <div class="form-group"><label class="form-label">Pattern I noticed</label><textarea class="form-textarea" id="reflect-pattern" placeholder="What kept repeating..." style="min-height:60px"></textarea></div>
+      <div class="form-group"><label class="form-label">One thing to tighten next week</label><textarea class="form-textarea" id="reflect-next" placeholder="Specific and concrete..." style="min-height:60px"></textarea></div>
+      <div class="form-group">
+        <label class="form-label">Did I keep my word?</label>
+        <div class="form-row-2">
+          <button class="quality-btn sel-green" id="kept-yes" onclick="selectKeptWord('yes')">✓ Yes, I did</button>
+          <button class="quality-btn" id="kept-no" onclick="selectKeptWord('no')">✗ No, I didn't</button>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-block" onclick="saveReflection()">Save Entry</button>
+    </div>
+    <div class="section-label">Past Reflections</div>
+    <div id="journal-entries-list"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     PAGE: SETTINGS
+═══════════════════════════════════ -->
+<div class="page" id="page-settings">
+  <div class="page-scroll">
+    <h1 style="margin-bottom:4px">Settings</h1>
+    <div style="font-size:13px;color:var(--gray-5);margin-bottom:16px">Targets, checklist, data management</div>
+    <div class="section-label">Your Targets</div>
+    <div class="card" style="margin-bottom:16px">
+      <div class="form-group"><label class="form-label">Weed sessions / day target</label><input type="number" class="form-input" id="s-weed-target" value="1" min="0"></div>
+      <div class="form-group"><label class="form-label">Workouts / week target</label><input type="number" class="form-input" id="s-workout-target" value="5" min="1"></div>
+      <div class="form-group"><label class="form-label">Sleep goal (hours)</label><input type="number" class="form-input" id="s-sleep-target" value="7" min="4" step="0.5"></div>
+      <div class="form-group"><label class="form-label">Starting weight (lbs)</label><input type="number" class="form-input" id="s-start-weight" value="162" step="0.1"></div>
+      <button class="btn btn-primary btn-block" onclick="saveSettings()">Save Targets</button>
+    </div>
+    <div class="section-label">Daily Checklist Items</div>
+    <div class="card" style="margin-bottom:16px">
+      <div id="check-items-list"></div>
+      <div style="height:10px"></div>
+      <div style="display:flex;gap:8px">
+        <input type="text" class="form-input" id="new-check-item" placeholder="Add new item..." style="flex:1">
+        <button class="btn btn-primary btn-sm" onclick="addCheckItem()">Add</button>
+      </div>
+    </div>
+    <div class="section-label">Data Management</div>
+    <div class="card" style="margin-bottom:12px">
+      <div style="font-size:13px;color:var(--gray-5);margin-bottom:12px">Clear all logged data and start fresh. Settings and control categories are preserved.</div>
+      <button class="btn btn-outline btn-block" style="color:var(--amber);border-color:var(--amber)" onclick="clearDemoData()">Clear All Data</button>
+    </div>
+    <div class="card">
+      <div style="font-size:13px;color:var(--gray-5);margin-bottom:12px">Permanently wipe everything including settings.</div>
+      <button class="btn btn-outline btn-block" style="color:var(--red);border-color:var(--red)" onclick="if(confirm('Reset EVERYTHING?')){localStorage.clear();location.reload()}">Reset All Data</button>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav id="bottom-nav">
+  <button class="nav-item active" onclick="navTo('today',this)"><span class="nav-icon">🏠</span><span class="nav-label">Today</span></button>
+  <button class="nav-item" onclick="navTo('log',this)"><span class="nav-icon">📋</span><span class="nav-label">Log</span></button>
+  <button class="nav-item" onclick="navTo('dashboard',this)"><span class="nav-icon">📊</span><span class="nav-label">Dashboard</span></button>
+  <button class="nav-item" onclick="navTo('calendar',this)"><span class="nav-icon">📅</span><span class="nav-label">Calendar</span></button>
+  <button class="nav-item" onclick="navTo('control',this)"><span class="nav-icon">🔒</span><span class="nav-label">Control</span></button>
+  <button class="nav-item" onclick="navTo('journal',this)"><span class="nav-icon">📓</span><span class="nav-label">Journal</span></button>
+  <button class="nav-item" onclick="navTo('settings',this)"><span class="nav-icon">⚙️</span><span class="nav-label">Settings</span></button>
+</nav>
+
+<!-- ═══ MODALS ═══ -->
+
+<!-- WORKOUT MODAL -->
+<div class="modal-overlay" id="modal-workout">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Log Workout 💪</div>
+    <div class="form-row-2" style="margin-bottom:14px">
+      <div class="form-group" style="margin-bottom:0"><label class="form-label">Date</label><input type="date" class="form-input" id="w-date"></div>
+      <div class="form-group" style="margin-bottom:0"><label class="form-label">Type</label>
+        <select class="form-select" id="w-type">
+          <option>Pull Day</option><option>Push Day</option><option>Legs</option><option>Full Body</option>
+          <option>Calisthenics</option><option>Dumbbell Upper</option><option>Dumbbell Lower</option>
+          <option>Conditioning</option><option>Mobility</option><option>Custom</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row-2" style="margin-bottom:14px">
+      <div class="form-group" style="margin-bottom:0"><label class="form-label">Start Time</label><input type="time" class="form-input" id="w-start"></div>
+      <div class="form-group" style="margin-bottom:0"><label class="form-label">Duration (min)</label><input type="number" class="form-input" id="w-dur" placeholder="45" min="1"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Energy Before (1–5)</label>
+      <div style="display:flex;gap:6px">
+        <button class="quality-btn" style="flex:1" data-energy="1" onclick="selEnergy(1)">1</button>
+        <button class="quality-btn" style="flex:1" data-energy="2" onclick="selEnergy(2)">2</button>
+        <button class="quality-btn sel-amber" style="flex:1" data-energy="3" onclick="selEnergy(3)">3</button>
+        <button class="quality-btn" style="flex:1" data-energy="4" onclick="selEnergy(4)">4</button>
+        <button class="quality-btn" style="flex:1" data-energy="5" onclick="selEnergy(5)">5</button>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="w-notes" placeholder="PRs, how it felt, what you noticed..." style="min-height:60px"></textarea></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div class="section-label" style="margin-bottom:0">Exercises</div>
+      <button class="btn btn-sm btn-outline" onclick="addExBlock()">+ Add Exercise</button>
+    </div>
+    <div id="ex-blocks"></div>
+    <button class="btn btn-primary btn-block" style="margin-top:8px" onclick="saveWorkout()">Save Workout</button>
+    <div style="height:10px"></div>
+    <button class="btn btn-outline btn-block" onclick="closeModal('modal-workout')">Cancel</button>
+  </div>
+</div>
+
+<!-- WEED MODAL -->
+<div class="modal-overlay" id="modal-weed">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Log Weed Session 🌿</div>
+    <div class="form-row-2" style="margin-bottom:14px">
+      <div class="form-group" style="margin-bottom:0"><label class="form-label">Method</label>
+        <select class="form-select" id="weed-method"><option>Joint</option><option>Bowl</option><option>Bong</option><option>Vape</option><option>Edible</option><option>Other</option></select>
+      </div>
+      <div class="form-group" style="margin-bottom:0"><label class="form-label">Amount (g)</label><input type="number" class="form-input" id="weed-amount" placeholder="0.5" step="0.1" min="0"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Trigger / Reason</label>
+      <select class="form-select" id="weed-trigger"><option>Habit</option><option>Stress</option><option>Boredom</option><option>Reward</option><option>Sleep</option><option>Social</option><option>Custom</option></select>
+    </div>
+    <div class="form-group"><label class="form-label">Time</label><input type="time" class="form-input" id="weed-time"></div>
+    <button class="btn btn-primary btn-block" onclick="saveWeed()">Log Session</button>
+    <div style="height:10px"></div>
+    <button class="btn btn-outline btn-block" onclick="closeModal('modal-weed')">Cancel</button>
+  </div>
+</div>
+
+<!-- MEAL MODAL -->
+<div class="modal-overlay" id="modal-meal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Log Meal 🍽</div>
+    <div class="form-group"><label class="form-label">Meal Description</label><input type="text" class="form-input" id="meal-name" placeholder="e.g. Chicken & rice, Eggs..."></div>
+    <div class="form-group">
+      <label class="form-label">Quality</label>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+        <button class="quality-btn sel-green" id="qb-clean" onclick="selectQuality('Clean')">&#10003; Clean</button>
+        <button class="quality-btn" id="qb-decent" onclick="selectQuality('Decent')">&#126; Decent</button>
+        <button class="quality-btn" id="qb-poor" onclick="selectQuality('Poor')">&#10007; Poor</button>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">Time</label><input type="time" class="form-input" id="meal-time"></div>
+    <button class="btn btn-primary btn-block" onclick="saveMeal()">Log Meal</button>
+    <div style="height:10px"></div>
+    <button class="btn btn-outline btn-block" onclick="closeModal('modal-meal')">Cancel</button>
+  </div>
+</div>
+
+<!-- WATER MODAL -->
+<div class="modal-overlay" id="modal-water">
+  <div class="modal-sheet" style="padding-bottom:24px">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Log Water 💧</div>
+    <div class="form-group"><label class="form-label">Glasses Today</label><input type="number" class="form-input" id="water-glasses" placeholder="8" min="0"></div>
+    <button class="btn btn-primary btn-block" onclick="saveWater()">Log</button>
+    <div style="height:10px"></div>
+    <button class="btn btn-outline btn-block" onclick="closeModal('modal-water')">Cancel</button>
+  </div>
+</div>
+
+<!-- SLEEP MODAL -->
+<div class="modal-overlay" id="modal-sleep">
+  <div class="modal-sheet" style="padding-bottom:24px">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Log Sleep 😴</div>
+    <div class="form-group"><label class="form-label">Hours Slept</label><input type="number" class="form-input" id="sleep-hours" placeholder="7" step="0.5" min="0"></div>
+    <div class="form-group"><label class="form-label">Quality</label>
+      <select class="form-select" id="sleep-quality"><option>Great</option><option>Good</option><option>Decent</option><option>Poor</option></select>
+    </div>
+    <button class="btn btn-primary btn-block" onclick="saveSleep()">Log Sleep</button>
+    <div style="height:10px"></div>
+    <button class="btn btn-outline btn-block" onclick="closeModal('modal-sleep')">Cancel</button>
+  </div>
+</div>
+
+<!-- WEIGHT MODAL -->
+<div class="modal-overlay" id="modal-weight">
+  <div class="modal-sheet" style="padding-bottom:24px">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Log Weight ⚖️</div>
+    <div class="form-group"><label class="form-label">Weight (lbs)</label><input type="number" class="form-input" id="weight-val" placeholder="162" step="0.1"></div>
+    <div class="form-group"><label class="form-label">Notes (optional)</label><input type="text" class="form-input" id="weight-notes" placeholder="Morning weigh-in..."></div>
+    <button class="btn btn-primary btn-block" onclick="saveWeight()">Log Weight</button>
+    <div style="height:10px"></div>
+    <button class="btn btn-outline btn-block" onclick="closeModal('modal-weight')">Cancel</button>
+  </div>
+</div>
+
+<!-- CONTROL SETTINGS MODAL -->
+<div class="modal-overlay" id="modal-ctrl-settings">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Edit Control Categories</div>
+    <p style="font-size:13px;color:var(--gray-5);margin-bottom:16px">Toggle which behaviors you're tracking this month.</p>
+    <div id="ctrl-toggle-list"></div>
+    <button class="btn btn-primary btn-block" onclick="saveCtrlSettings()">Save</button>
+    <div style="height:10px"></div>
+    <button class="btn btn-outline btn-block" onclick="closeModal('modal-ctrl-settings')">Cancel</button>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
