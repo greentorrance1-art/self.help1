@@ -434,24 +434,35 @@
 </div>
 
 <script src="app.js"></script>
-  <script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 
-  // Your web app's Firebase configuration
-  const firebaseConfig = {
-    apiKey: "AIzaSyA0w3tjNK9cfAzF4VL7zLN73VYO0u0NRqs",
-    authDomain: "self-review-os.firebaseapp.com",
-    projectId: "self-review-os",
-    storageBucket: "self-review-os.firebasestorage.app",
-    messagingSenderId: "731839633482",
-    appId: "1:731839633482:web:f237e546356e2f85b1aeb3"
-  };
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyA0w3tjNK9cfAzF4VL7zLN73VY00u0NRqs",
+  authDomain: "self-review-os.firebaseapp.com",
+  projectId: "self-review-os",
+  storageBucket: "self-review-os.firebasestorage.app",
+  messagingSenderId: "731839633482",
+  appId: "1:731839633482:web:f237e546356e2f85b1aeb3"
+};
 
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
+firebase.initializeApp(firebaseConfig);
+</script>
+
+<script>
+firebase.auth().onAuthStateChanged((user) => {
+  if (!user) {
+    const email = prompt("Enter email:");
+    const password = prompt("Enter password:");
+
+    firebase.auth().signInWithEmailAndPassword(email, password)
+      .catch(() => {
+        firebase.auth().createUserWithEmailAndPassword(email, password);
+      });
+  }
+});
 </script>
 </body>
 </html>
