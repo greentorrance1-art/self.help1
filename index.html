@@ -433,36 +433,39 @@
   </div>
 </div>
 
-<script src="app.js"></script>
-<!-- FIREBASE -->
+<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 
+<!-- Firebase Config -->
 <script>
 const firebaseConfig = {
-  apiKey: "AIzaSyA0w3tjNK9cfAzF4VL7zLN73VY00u0NRqs",
-  authDomain: "self-review-os.firebaseapp.com",
-  projectId: "self-review-os",
-  storageBucket: "self-review-os.firebasestorage.app",
-  messagingSenderId: "731839633482",
-  appId: "1:731839633482:web:f237e546356e2f85b1aeb3"
+  apiKey: "YOUR_KEY",
+  authDomain: "YOUR_DOMAIN",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_BUCKET",
+  messagingSenderId: "YOUR_ID",
+  appId: "YOUR_APP_ID"
 };
-
 firebase.initializeApp(firebaseConfig);
 </script>
 
+<!-- Firebase Auth Logic -->
 <script>
 firebase.auth().onAuthStateChanged((user) => {
-  if (!user) {
-    const email = prompt("Enter email:");
-    const password = prompt("Enter password:");
+  if (!user) {
+    const email = prompt("Enter email:");
+    const password = prompt("Enter password:");
 
-    firebase.auth().signInWithEmailAndPassword(email, password)
-      .catch(() => {
-        firebase.auth().createUserWithEmailAndPassword(email, password);
-      });
-  }
+    firebase.auth().signInWithEmailAndPassword(email, password)
+      .catch(() => {
+        firebase.auth().createUserWithEmailAndPassword(email, password);
+      });
+  }
 });
 </script>
+
+<!-- Your App LAST -->
+<script src="app.js"></script>
 </body>
 </html>
