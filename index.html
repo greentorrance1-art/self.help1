@@ -8,13 +8,131 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=DM+Serif+Display&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <link rel="stylesheet" href="styles.css">
+<style>
+/* ════════════════════════════════════════
+   LOADING SCREEN
+════════════════════════════════════════ */
+#loading-screen{
+  position:fixed;inset:0;background:#f4f4f0;z-index:9000;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+}
+.loading-logo{font-family:'DM Serif Display',serif;font-size:28px;color:#1a1a1a;letter-spacing:-0.3px;}
+.loading-sub{font-size:12px;color:#8a8a82;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;}
+.loading-dot-row{display:flex;gap:6px;margin-top:8px;}
+.loading-dot{width:6px;height:6px;border-radius:50%;background:#c8c8c2;animation:dotPulse 1.2s ease-in-out infinite;}
+.loading-dot:nth-child(2){animation-delay:0.2s;}
+.loading-dot:nth-child(3){animation-delay:0.4s;}
+@keyframes dotPulse{0%,80%,100%{opacity:0.3;transform:scale(0.8)}40%{opacity:1;transform:scale(1)}}
+
+/* ════════════════════════════════════════
+   AUTH SCREEN
+════════════════════════════════════════ */
+#auth-screen{
+  position:fixed;inset:0;background:#f4f4f0;z-index:8000;
+  display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;
+}
+.auth-card{
+  width:100%;max-width:400px;background:#fff;border-radius:20px;
+  padding:32px 28px;box-shadow:0 4px 32px rgba(0,0,0,0.09);
+}
+.auth-brand{text-align:center;margin-bottom:28px;}
+.auth-brand-name{
+  font-family:'DM Serif Display',serif;font-size:28px;color:#1a1a1a;
+  letter-spacing:-0.3px;line-height:1.1;margin-bottom:6px;
+}
+.auth-brand-tag{font-size:12px;color:#8a8a82;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;}
+.auth-divider{height:1px;background:#e0e0db;margin:0 0 24px;}
+.auth-mode-toggle{
+  display:flex;background:#f4f4f0;border-radius:10px;padding:3px;margin-bottom:24px;
+}
+.auth-mode-btn{
+  flex:1;padding:8px;border:none;background:transparent;border-radius:8px;
+  font-size:13px;font-weight:600;color:#8a8a82;cursor:pointer;transition:all 0.15s ease;font-family:inherit;
+}
+.auth-mode-btn.active{background:#1a1a1a;color:#fff;}
+.auth-field{margin-bottom:14px;}
+.auth-label{
+  font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;
+  color:#8a8a82;display:block;margin-bottom:6px;
+}
+.auth-input{
+  width:100%;background:#f9f9f7;border:1.5px solid #e0e0db;border-radius:10px;
+  padding:12px 14px;font-size:15px;font-family:inherit;color:#1a1a1a;outline:none;
+  transition:border-color 0.15s ease;box-sizing:border-box;
+}
+.auth-input:focus{border-color:#1a1a1a;}
+.auth-submit-btn{
+  width:100%;padding:13px;border-radius:10px;border:none;background:#1a1a1a;color:#fff;
+  font-size:14px;font-weight:700;cursor:pointer;transition:all 0.15s ease;
+  font-family:inherit;margin-top:6px;letter-spacing:0.02em;
+}
+.auth-submit-btn:active{background:#444440;transform:scale(0.98);}
+.auth-submit-btn:disabled{opacity:0.6;cursor:default;}
+.auth-error{
+  background:#fdf0f0;border:1.5px solid #d94f4f;border-radius:8px;
+  padding:10px 14px;font-size:13px;color:#d94f4f;font-weight:500;
+  margin-top:14px;display:none;line-height:1.4;
+}
+.auth-error.show{display:block;}
+.auth-footer{text-align:center;margin-top:20px;font-size:12px;color:#8a8a82;line-height:1.7;}
+
+/* App wrapper hidden until auth resolves */
+#app-wrapper{display:none;}
+#app-wrapper.visible{display:block;}
+</style>
 </head>
 <body>
+
+<!-- ═══════════════════════════════════
+     LOADING SCREEN
+═══════════════════════════════════ -->
+<div id="loading-screen">
+  <div class="loading-logo">Self Review OS</div>
+  <div class="loading-sub">Loading</div>
+  <div class="loading-dot-row">
+    <div class="loading-dot"></div>
+    <div class="loading-dot"></div>
+    <div class="loading-dot"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     AUTH SCREEN
+═══════════════════════════════════ -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <div class="auth-brand-name">Self Review OS</div>
+      <div class="auth-brand-tag">Track yourself honestly</div>
+    </div>
+    <div class="auth-divider"></div>
+    <div class="auth-mode-toggle">
+      <button class="auth-mode-btn active" id="btn-mode-login" onclick="setAuthMode('login')">Log In</button>
+      <button class="auth-mode-btn" id="btn-mode-signup" onclick="setAuthMode('signup')">Sign Up</button>
+    </div>
+    <div class="auth-field">
+      <label class="auth-label">Email</label>
+      <input class="auth-input" type="email" id="auth-email" placeholder="you@example.com" autocomplete="email">
+    </div>
+    <div class="auth-field">
+      <label class="auth-label">Password</label>
+      <input class="auth-input" type="password" id="auth-password" placeholder="Min. 6 characters" autocomplete="current-password">
+    </div>
+    <button class="auth-submit-btn" id="auth-submit-btn" onclick="handleAuthSubmit()">Log In</button>
+    <div class="auth-error" id="auth-error"></div>
+    <div class="auth-footer" id="auth-footer">New here? Switch to <strong>Sign Up</strong> above.</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     MAIN APP WRAPPER
+═══════════════════════════════════ -->
+<div id="app-wrapper">
 
 <div class="topbar">
   <div>
     <div class="topbar-date" id="top-date">—</div>
-    <div class="topbar-name">Hey, Torrance 👋</div>
+    <div class="topbar-name" id="topbar-name">Welcome 👋</div>
   </div>
   <div class="streak-badge">🔥 <span id="top-streak">0</span> days</div>
 </div>
@@ -277,9 +395,14 @@
       <div style="font-size:13px;color:var(--gray-5);margin-bottom:12px">Clear all logged data and start fresh. Settings and control categories are preserved.</div>
       <button class="btn btn-outline btn-block" style="color:var(--amber);border-color:var(--amber)" onclick="clearDemoData()">Clear All Data</button>
     </div>
-    <div class="card">
+    <div class="card" style="margin-bottom:12px">
       <div style="font-size:13px;color:var(--gray-5);margin-bottom:12px">Permanently wipe everything including settings.</div>
       <button class="btn btn-outline btn-block" style="color:var(--red);border-color:var(--red)" onclick="if(confirm('Reset EVERYTHING?')){localStorage.clear();location.reload()}">Reset All Data</button>
+    </div>
+    <div class="section-label">Account</div>
+    <div class="card">
+      <div style="font-size:13px;color:var(--gray-5);margin-bottom:12px" id="settings-email-display">Signed in</div>
+      <button class="btn btn-outline btn-block" style="color:var(--red);border-color:var(--red)" onclick="handleLogout()">Log Out</button>
     </div>
   </div>
 </div>
@@ -433,39 +556,166 @@
   </div>
 </div>
 
-<!-- Firebase SDK -->
+</div><!-- end #app-wrapper -->
+
+<!-- ════════════════════════════════════════
+     FIREBASE SDK — must load before config
+════════════════════════════════════════ -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
-<!-- Firebase Config -->
+<!-- ════════════════════════════════════════
+     FIREBASE CONFIG — replace values with your real project
+════════════════════════════════════════ -->
 <script>
 const firebaseConfig = {
-  apiKey: "YOUR_KEY",
-  authDomain: "YOUR_DOMAIN",
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_AUTH_DOMAIN",
   projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_BUCKET",
-  messagingSenderId: "YOUR_ID",
+  storageBucket: "YOUR_STORAGE_BUCKET",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
   appId: "YOUR_APP_ID"
 };
 firebase.initializeApp(firebaseConfig);
 </script>
 
-<!-- Firebase Auth Logic -->
+<!-- ════════════════════════════════════════
+     AUTH UI + AUTH STATE CONTROLLER
+════════════════════════════════════════ -->
 <script>
-firebase.auth().onAuthStateChanged((user) => {
-  if (!user) {
-    const email = prompt("Enter email:");
-    const password = prompt("Enter password:");
+// ── Auth mode toggle ─────────────────────────────────────────
+var _authMode = 'login';
 
+function setAuthMode(mode) {
+  _authMode = mode;
+  document.getElementById('btn-mode-login').classList.toggle('active', mode === 'login');
+  document.getElementById('btn-mode-signup').classList.toggle('active', mode === 'signup');
+  document.getElementById('auth-submit-btn').textContent = mode === 'login' ? 'Log In' : 'Create Account';
+  document.getElementById('auth-footer').innerHTML = mode === 'login'
+    ? 'New here? Switch to <strong>Sign Up</strong> above.'
+    : 'Already have an account? Switch to <strong>Log In</strong> above.';
+  clearAuthError();
+}
+
+function showAuthError(msg) {
+  var el = document.getElementById('auth-error');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+function clearAuthError() {
+  var el = document.getElementById('auth-error');
+  el.textContent = '';
+  el.classList.remove('show');
+}
+
+// ── Submit handler ───────────────────────────────────────────
+function handleAuthSubmit() {
+  var email    = document.getElementById('auth-email').value.trim();
+  var password = document.getElementById('auth-password').value;
+  clearAuthError();
+
+  if (!email || !password) { showAuthError('Please enter both email and password.'); return; }
+  if (password.length < 6)  { showAuthError('Password must be at least 6 characters.'); return; }
+
+  var btn = document.getElementById('auth-submit-btn');
+  btn.textContent = 'Please wait…';
+  btn.disabled = true;
+
+  var resetBtn = function(label) { btn.textContent = label; btn.disabled = false; };
+
+  if (_authMode === 'login') {
     firebase.auth().signInWithEmailAndPassword(email, password)
-      .catch(() => {
-        firebase.auth().createUserWithEmailAndPassword(email, password);
-      });
+      .catch(function(err) { resetBtn('Log In'); showAuthError(friendlyAuthError(err.code)); });
+  } else {
+    firebase.auth().createUserWithEmailAndPassword(email, password)
+      .catch(function(err) { resetBtn('Create Account'); showAuthError(friendlyAuthError(err.code)); });
+  }
+}
+
+function friendlyAuthError(code) {
+  var map = {
+    'auth/user-not-found':      'No account found with that email.',
+    'auth/wrong-password':      'Incorrect password. Try again.',
+    'auth/invalid-email':       'That email address doesn\'t look right.',
+    'auth/email-already-in-use':'An account with that email already exists. Try logging in.',
+    'auth/weak-password':       'Password must be at least 6 characters.',
+    'auth/too-many-requests':   'Too many attempts. Please wait and try again.',
+    'auth/invalid-credential':  'Email or password is incorrect.'
+  };
+  return map[code] || 'Something went wrong. Please try again.';
+}
+
+// ── Logout ───────────────────────────────────────────────────
+function handleLogout() {
+  if (!confirm('Log out of Self Review OS?')) return;
+  firebase.auth().signOut();
+}
+
+// ── Enter key on auth inputs ─────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  ['auth-email','auth-password'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('keydown', function(e) { if (e.key === 'Enter') handleAuthSubmit(); });
+  });
+});
+
+// ── Auth state listener — controls which screen is visible ───
+firebase.auth().onAuthStateChanged(function(user) {
+  var loading   = document.getElementById('loading-screen');
+  var authScreen= document.getElementById('auth-screen');
+  var appWrapper= document.getElementById('app-wrapper');
+
+  if (user) {
+    authScreen.style.display = 'none';
+    loading.style.display    = 'flex'; // keep spinner while Firestore loads
+
+    // Personalized greeting: use email prefix
+    var displayName = user.email.split('@')[0];
+    var nameEl = document.getElementById('topbar-name');
+    if (nameEl) nameEl.textContent = 'Hey, ' + displayName + ' 👋';
+
+    // Show email in Settings > Account
+    var emailEl = document.getElementById('settings-email-display');
+    if (emailEl) emailEl.textContent = 'Signed in as ' + user.email;
+
+    // Load Firestore data then reveal app
+    if (typeof loadUserData === 'function') {
+      loadUserData(user.uid)
+        .then(function() {
+          loading.style.display = 'none';
+          appWrapper.classList.add('visible');
+          if (typeof renderToday  === 'function') renderToday();
+          if (typeof renderMantra === 'function') renderMantra();
+        })
+        .catch(function(err) {
+          console.error('Firestore load error:', err);
+          loading.style.display = 'none';
+          appWrapper.classList.add('visible');
+          if (typeof renderToday  === 'function') renderToday();
+          if (typeof renderMantra === 'function') renderMantra();
+        });
+    } else {
+      loading.style.display = 'none';
+      appWrapper.classList.add('visible');
+    }
+  } else {
+    // Signed out — wipe app state if app.js has already run
+    if (typeof resetAppState === 'function') resetAppState();
+    appWrapper.classList.remove('visible');
+    loading.style.display = 'none';
+    authScreen.style.display = 'flex';
+    // Re-enable auth button
+    var btn = document.getElementById('auth-submit-btn');
+    if (btn) { btn.disabled = false; btn.textContent = 'Log In'; }
+    setAuthMode('login');
   }
 });
 </script>
 
-<!-- Your App LAST -->
+<!-- ════════════════════════════════════════
+     YOUR APP — must be last
+════════════════════════════════════════ -->
 <script src="app.js"></script>
 </body>
 </html>
