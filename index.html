@@ -20,6 +20,19 @@ const firebaseConfig = {
   appId: "1:731839633482:web:f237e546356e2f85b1aeb3"
 };
 firebase.initializeApp(firebaseConfig);
+
+// Hard timeout: if nothing resolves in 3s, force show auth screen
+window._sroTimeout = setTimeout(function() {
+  var ls = document.getElementById('loading-screen');
+  var as = document.getElementById('auth-screen');
+  var aw = document.getElementById('app-wrapper');
+  if (ls && ls.style.display !== 'none') {
+    ls.style.display = 'none';
+    if (aw && !aw.classList.contains('visible')) {
+      if (as) as.style.display = 'flex';
+    }
+  }
+}, 3000);
 </script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <link rel="stylesheet" href="styles.css">
@@ -656,6 +669,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<script src="app-v2.js"></script>
+<script src="app-v2.js" defer></script>
 </body>
 </html>
