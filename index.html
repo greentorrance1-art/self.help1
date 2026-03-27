@@ -685,25 +685,40 @@ firebase.auth().onAuthStateChanged(function(user) {
     var emailEl = document.getElementById('settings-email-display');
     if (emailEl) emailEl.textContent = 'Signed in as ' + user.email;
 
+    // Helper to reveal app regardless of what happens
+    function revealApp() {
+      loading.style.display = 'none';
+      authScreen.style.display = 'none';
+      appWrapper.classList.add('visible');
+      if (typeof renderToday  === 'function') renderToday();
+      if (typeof renderMantra === 'function') renderMantra();
+    }
+
+    // Safety net: if Firestore takes too long or crashes, open app anyway
+    var _appRevealTimer = setTimeout(revealApp, 5000);
+
     // Load Firestore data then reveal app
     if (typeof loadUserData === 'function') {
-      loadUserData(user.uid)
-        .then(function() {
-          loading.style.display = 'none';
-          appWrapper.classList.add('visible');
-          if (typeof renderToday  === 'function') renderToday();
-          if (typeof renderMantra === 'function') renderMantra();
-        })
-        .catch(function(err) {
-          console.error('Firestore load error:', err);
-          loading.style.display = 'none';
-          appWrapper.classList.add('visible');
-          if (typeof renderToday  === 'function') renderToday();
-          if (typeof renderMantra === 'function') renderMantra();
-        });
+      try {
+        loadUserData(user.uid)
+          .then(function() {
+            clearTimeout(_appRevealTimer);
+            revealApp();
+          })
+          .catch(function(err) {
+            console.error('Firestore load error:', err);
+            clearTimeout(_appRevealTimer);
+            revealApp();
+          });
+      } catch(e) {
+        console.error('loadUserData threw:', e);
+        clearTimeout(_appRevealTimer);
+        revealApp();
+      }
     } else {
-      loading.style.display = 'none';
-      appWrapper.classList.add('visible');
+      console.warn('loadUserData not defined — app.js may have a syntax error');
+      clearTimeout(_appRevealTimer);
+      revealApp();
     }
   } else {
     // Signed out — wipe app state if app.js has already run
