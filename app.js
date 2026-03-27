@@ -1,8 +1,9 @@
 // ════════════════════════════════════════
-// FIRESTORE REFERENCE (set after Firebase init in index.html)
+// FIRESTORE REFERENCE — lazy init to avoid crash on load
 // ════════════════════════════════════════
-var db = firebase.firestore();
+var _db = null;
 var _currentUid = null;
+function getDb(){if(!_db)_db=firebase.firestore();return _db;}
 
 // ════════════════════════════════════════
 // DEFAULT USER DATA — used for new accounts
@@ -44,7 +45,7 @@ function getDefaultUserData() {
 // ════════════════════════════════════════
 function loadUserData(uid) {
   _currentUid = uid;
-  var docRef = db.collection('users').doc(uid).collection('data').doc('appState');
+  var docRef = getDb().collection('users').doc(uid).collection('data').doc('appState');
 
   return docRef.get().then(function(doc) {
     var data = doc.exists ? doc.data() : getDefaultUserData();
@@ -76,7 +77,7 @@ function loadUserData(uid) {
 // ════════════════════════════════════════
 function saveUserData() {
   if (!_currentUid) return Promise.resolve();
-  var docRef = db.collection('users').doc(_currentUid).collection('data').doc('appState');
+  var docRef = getDb().collection('users').doc(_currentUid).collection('data').doc('appState');
   return docRef.set({
     settings:       settings,
     workouts:       workouts,
