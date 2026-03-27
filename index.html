@@ -654,83 +654,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (el) el.addEventListener('keydown', function(e) { if (e.key === 'Enter') handleAuthSubmit(); });
   });
 });
-
-// ── Global reveal function ───────────────────────────────────
-function revealApp(user) {
-  var loading    = document.getElementById('loading-screen');
-  var authScreen = document.getElementById('auth-screen');
-  var appWrapper = document.getElementById('app-wrapper');
-  loading.style.display    = 'none';
-  authScreen.style.display = 'none';
-  appWrapper.classList.add('visible');
-  if (user) {
-    var displayName = user.email.split('@')[0];
-    var nameEl = document.getElementById('topbar-name');
-    if (nameEl) nameEl.textContent = 'Hey, ' + displayName + ' 👋';
-    var emailEl = document.getElementById('settings-email-display');
-    if (emailEl) emailEl.textContent = 'Signed in as ' + user.email;
-  }
-  if (typeof renderToday  === 'function') renderToday();
-  if (typeof renderMantra === 'function') renderMantra();
-}
-
-// ── Auth state listener ───────────────────────────────────────
-firebase.auth().onAuthStateChanged(function(user) {
-  var loading    = document.getElementById('loading-screen');
-  var authScreen = document.getElementById('auth-screen');
-  var appWrapper = document.getElementById('app-wrapper');
-
-  if (user) {
-    authScreen.style.display = 'none';
-    loading.style.display    = 'flex';
-
-    // Hard fallback: open app after 4s no matter what
-    var revealTimer = setTimeout(function() {
-      console.warn('SRO: fallback reveal fired');
-      revealApp(user);
-    }, 4000);
-
-    function tryLoad() {
-      if (typeof loadUserData === 'function') {
-        try {
-          loadUserData(user.uid)
-            .then(function()  { clearTimeout(revealTimer); revealApp(user); })
-            .catch(function() { clearTimeout(revealTimer); revealApp(user); });
-        } catch(e) {
-          clearTimeout(revealTimer);
-          revealApp(user);
-        }
-      } else {
-        // app.js not parsed yet, wait 300ms and retry once
-        setTimeout(function() {
-          if (typeof loadUserData === 'function') {
-            loadUserData(user.uid)
-              .then(function()  { clearTimeout(revealTimer); revealApp(user); })
-              .catch(function() { clearTimeout(revealTimer); revealApp(user); });
-          } else {
-            clearTimeout(revealTimer);
-            revealApp(user);
-          }
-        }, 300);
-      }
-    }
-    tryLoad();
-
-  } else {
-    if (typeof resetAppState === 'function') resetAppState();
-    appWrapper.classList.remove('visible');
-    loading.style.display = 'none';
-    authScreen.style.display = 'flex';
-    var btn = document.getElementById('auth-submit-btn');
-    if (btn) { btn.disabled = false; btn.textContent = 'Log In'; }
-    setAuthMode('login');
-  }
-});
 </script>
 
-<!-- ════════════════════════════════════════
-     YOUR APP — must be last
-════════════════════════════════════════ -->
 <script src="app-v2.js"></script>
 </body>
 </html>
