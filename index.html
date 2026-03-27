@@ -660,8 +660,19 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 
+// ── Safety timeout ───
+var _authResolved = false;
+setTimeout(function() {
+  if (!_authResolved) {
+    console.warn("SRO: Auth timeout — add greentorrance1-art.github.io to Firebase Authorized Domains");
+    document.getElementById("loading-screen").style.display = "none";
+    document.getElementById("auth-screen").style.display = "flex";
+  }
+}, 8000);
+
 // ── Auth state listener — controls which screen is visible ───
 firebase.auth().onAuthStateChanged(function(user) {
+  _authResolved = true;
   var loading   = document.getElementById('loading-screen');
   var authScreen= document.getElementById('auth-screen');
   var appWrapper= document.getElementById('app-wrapper');
