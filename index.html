@@ -6,6 +6,21 @@
 <title>Self Review OS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<!-- Firebase SDK in <head> — must load before app.js -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyA0w3tjNK9cfAzF4VL7zLN73VYO0u0NRqs",
+  authDomain: "self-review-os.firebaseapp.com",
+  projectId: "self-review-os",
+  storageBucket: "self-review-os.firebasestorage.app",
+  messagingSenderId: "731839633482",
+  appId: "1:731839633482:web:f237e546356e2f85b1aeb3"
+};
+firebase.initializeApp(firebaseConfig);
+</script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <link rel="stylesheet" href="styles.css">
 <style>
@@ -558,27 +573,7 @@
 
 </div><!-- end #app-wrapper -->
 
-<!-- ════════════════════════════════════════
-     FIREBASE SDK — must load before config
-════════════════════════════════════════ -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-
-<!-- ════════════════════════════════════════
-     FIREBASE CONFIG — replace values with your real project
-════════════════════════════════════════ -->
-<script>
-const firebaseConfig = {
-  apiKey: "AIzaSyA0w3tjNK9cfAzF4VL7zLN73VYO0u0NRqs",
-  authDomain: "self-review-os.firebaseapp.com",
-  projectId: "self-review-os",
-  storageBucket: "self-review-os.firebasestorage.app",
-  messagingSenderId: "731839633482",
-  appId: "1:731839633482:web:f237e546356e2f85b1aeb3"
-};
-firebase.initializeApp(firebaseConfig);
-</script>
+<!-- Firebase SDK + config moved to <head> -->
 
 <!-- ════════════════════════════════════════
      AUTH UI + AUTH STATE CONTROLLER
