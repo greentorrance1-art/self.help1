@@ -1047,6 +1047,7 @@ function revealApp(user) {
 }
 
 firebase.auth().onAuthStateChanged(function(user) {
+  if (window._sroTimeout) { clearTimeout(window._sroTimeout); window._sroTimeout = null; }
   var loading    = document.getElementById('loading-screen');
   var authScreen = document.getElementById('auth-screen');
   var appWrapper = document.getElementById('app-wrapper');
