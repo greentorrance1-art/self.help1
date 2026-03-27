@@ -634,9 +634,11 @@ function handleAuthSubmit() {
 
   if (_authMode === 'login') {
     firebase.auth().signInWithEmailAndPassword(email, password)
+      .then(function() { window.location.reload(); })
       .catch(function(err) { resetBtn('Log In'); showAuthError(friendlyAuthError(err.code)); });
   } else {
     firebase.auth().createUserWithEmailAndPassword(email, password)
+      .then(function() { window.location.reload(); })
       .catch(function(err) { resetBtn('Create Account'); showAuthError(friendlyAuthError(err.code)); });
   }
 }
