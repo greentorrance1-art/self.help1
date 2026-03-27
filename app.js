@@ -1,55 +1,165 @@
 // ════════════════════════════════════════
-// STORAGE
+// FIRESTORE REFERENCE (set after Firebase init in index.html)
 // ════════════════════════════════════════
-const S={
-  load:function(k){try{return JSON.parse(localStorage.getItem(k)||'null');}catch{return null;}},
-  save:function(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch{}}
+var db = firebase.firestore();
+var _currentUid = null;
+
+// ════════════════════════════════════════
+// DEFAULT USER DATA — used for new accounts
+// ════════════════════════════════════════
+function getDefaultUserData() {
+  return {
+    settings: { name: '', weedTarget: 1, workoutWeekTarget: 5, sleepTarget: 7, startWeight: 162 },
+    workouts: [],
+    weedLogs: [],
+    mealLogs: [],
+    waterLogs: [],
+    sleepLogs: [],
+    weightLog: [],
+    checkItems: [
+      { id: 1, label: 'No Doom Scroll',       pts: 15 },
+      { id: 2, label: '2 Real Meals',          pts: 15 },
+      { id: 3, label: 'Workout / Walk',        pts: 25 },
+      { id: 4, label: 'Read',                  pts: 15 },
+      { id: 5, label: 'Nightly Gratitude',     pts: 15 },
+      { id: 6, label: 'Phone Down by 10pm',    pts: 15 }
+    ],
+    dailyChecks: {},
+    ctrlCategories: [
+      { id: 'porn',   label: 'No Porn',           icon: '🔒', active: true },
+      { id: 'mast',   label: 'No Masturbation',   icon: '🔒', active: true },
+      { id: 'weed',   label: 'Weed Control',      icon: '🌿', active: true },
+      { id: 'scroll', label: 'No Doom Scrolling', icon: '📱', active: true },
+      { id: 'food',   label: 'Food Discipline',   icon: '🍽', active: true }
+    ],
+    ctrlLogs: {},
+    journalEntries: [],
+    mantraText: "I don't obey urges — I observe them until they pass."
+  };
+}
+
+// ════════════════════════════════════════
+// LOAD USER DATA FROM FIRESTORE
+// Called by index.html auth listener after login
+// ════════════════════════════════════════
+function loadUserData(uid) {
+  _currentUid = uid;
+  var docRef = db.collection('users').doc(uid).collection('data').doc('appState');
+
+  return docRef.get().then(function(doc) {
+    var data = doc.exists ? doc.data() : getDefaultUserData();
+
+    // Hydrate all app state variables
+    settings        = data.settings        || getDefaultUserData().settings;
+    workouts        = data.workouts        || [];
+    weedLogs        = data.weedLogs        || [];
+    mealLogs        = data.mealLogs        || [];
+    waterLogs       = data.waterLogs       || [];
+    sleepLogs       = data.sleepLogs       || [];
+    weightLog       = data.weightLog       || [];
+    checkItems      = data.checkItems      || getDefaultUserData().checkItems;
+    dailyChecks     = data.dailyChecks     || {};
+    ctrlCategories  = data.ctrlCategories  || getDefaultUserData().ctrlCategories;
+    ctrlLogs        = data.ctrlLogs        || {};
+    journalEntries  = data.journalEntries  || [];
+    mantraText      = data.mantraText      || getDefaultUserData().mantraText;
+
+    // If brand new user, save defaults immediately
+    if (!doc.exists) {
+      return saveUserData();
+    }
+  });
+}
+
+// ════════════════════════════════════════
+// SAVE ALL USER DATA TO FIRESTORE
+// ════════════════════════════════════════
+function saveUserData() {
+  if (!_currentUid) return Promise.resolve();
+  var docRef = db.collection('users').doc(_currentUid).collection('data').doc('appState');
+  return docRef.set({
+    settings:       settings,
+    workouts:       workouts,
+    weedLogs:       weedLogs,
+    mealLogs:       mealLogs,
+    waterLogs:      waterLogs,
+    sleepLogs:      sleepLogs,
+    weightLog:      weightLog,
+    checkItems:     checkItems,
+    dailyChecks:    dailyChecks,
+    ctrlCategories: ctrlCategories,
+    ctrlLogs:       ctrlLogs,
+    journalEntries: journalEntries,
+    mantraText:     mantraText
+  }).catch(function(err) {
+    console.error('Firestore save error:', err);
+  });
+}
+
+// ════════════════════════════════════════
+// RESET APP STATE ON LOGOUT
+// Called from index.html auth listener when user signs out
+// ════════════════════════════════════════
+function resetAppState() {
+  _currentUid = null;
+  var d = getDefaultUserData();
+  settings       = d.settings;
+  workouts       = d.workouts;
+  weedLogs       = d.weedLogs;
+  mealLogs       = d.mealLogs;
+  waterLogs      = d.waterLogs;
+  sleepLogs      = d.sleepLogs;
+  weightLog      = d.weightLog;
+  checkItems     = d.checkItems;
+  dailyChecks    = d.dailyChecks;
+  ctrlCategories = d.ctrlCategories;
+  ctrlLogs       = d.ctrlLogs;
+  journalEntries = d.journalEntries;
+  mantraText     = d.mantraText;
+}
+
+// ════════════════════════════════════════
+// LEGACY localStorage HELPER
+// Kept as no-op shim so nothing breaks if called internally.
+// Firestore is now the source of truth.
+// ════════════════════════════════════════
+var S = {
+  load: function(k) { return null; },
+  save: function(k, v) { /* no-op — Firestore handles persistence */ }
 };
 
 // ════════════════════════════════════════
-// STATE
+// STATE — initialized to defaults; overwritten by loadUserData()
 // ════════════════════════════════════════
-var settings=S.load('sro_settings')||{name:'Torrance',weedTarget:1,workoutWeekTarget:5,sleepTarget:7,startWeight:162};
-var workouts=S.load('sro_workouts')||[];
-var weedLogs=S.load('sro_weed')||[];
-var mealLogs=S.load('sro_meals')||[];
-var waterLogs=S.load('sro_water')||[];
-var sleepLogs=S.load('sro_sleep')||[];
-var weightLog=S.load('sro_weight')||[];
-var checkItems=S.load('sro_checks')||[
-  {id:1,label:'No Doom Scroll',pts:15},
-  {id:2,label:'2 Real Meals',pts:15},
-  {id:3,label:'Workout / Walk',pts:25},
-  {id:4,label:'Read',pts:15},
-  {id:5,label:'Nightly Gratitude',pts:15},
-  {id:6,label:'Phone Down by 10pm',pts:15}
-];
-var dailyChecks=S.load('sro_daily_checks')||{};
-var ctrlCategories=S.load('sro_ctrl_cats')||[
-  {id:'porn',label:'No Porn',icon:'🔒',active:true},
-  {id:'mast',label:'No Masturbation',icon:'🔒',active:true},
-  {id:'weed',label:'Weed Control',icon:'🌿',active:true},
-  {id:'scroll',label:'No Doom Scrolling',icon:'📱',active:true},
-  {id:'food',label:'Food Discipline',icon:'🍽',active:true}
-];
-var ctrlLogs=S.load('sro_ctrl_logs')||{};
-var journalEntries=S.load('sro_journal')||[];
-var mantraText=S.load('sro_mantra')||"I don't obey urges — I observe them until they pass.";
+var _d = getDefaultUserData();
+var settings       = _d.settings;
+var workouts       = _d.workouts;
+var weedLogs       = _d.weedLogs;
+var mealLogs       = _d.mealLogs;
+var waterLogs      = _d.waterLogs;
+var sleepLogs      = _d.sleepLogs;
+var weightLog      = _d.weightLog;
+var checkItems     = _d.checkItems;
+var dailyChecks    = _d.dailyChecks;
+var ctrlCategories = _d.ctrlCategories;
+var ctrlLogs       = _d.ctrlLogs;
+var journalEntries = _d.journalEntries;
+var mantraText     = _d.mantraText;
 
-var calYear=new Date().getFullYear();
-var calMonth=new Date().getMonth();
-var dashRange=7;
-var logFilter='all';
-var selectedMealQuality='Clean';
-var selectedEnergyVal=3;
-var keptWordVal='yes';
-var exerciseBlocks=[];
-var chartInstances={};
+var calYear            = new Date().getFullYear();
+var calMonth           = new Date().getMonth();
+var dashRange          = 7;
+var logFilter          = 'all';
+var selectedMealQuality= 'Clean';
+var selectedEnergyVal  = 3;
+var keptWordVal        = 'yes';
+var exerciseBlocks     = [];
+var chartInstances     = {};
 
 // EXERCISE LIBRARY
-var EX_LIB={
-  Calisthenics:['Pull-Ups','Chin-Ups','Neutral Grip Pull-Ups','Dips','Push-Ups','Diamond Push-Ups','Pike Push-Ups','Bodyweight Squats','Lunges','Step-Ups','Planks','Leg Raises','Mountain Climbers','Australian Rows','Hollow Body Hold'],
-  Dumbbell:['Dumbbell Curls','Hammer Curls','Shoulder Press','Lateral Raises','Front Raises','Bent-Over Rows','Goblet Squats','Romanian Deadlifts','DB Lunges','Chest Press','Skull Crushers','Overhead Extensions','Arnold Press','Incline Curl','Concentration Curl','Farmers Carry','DB Shrug','Zottman Curl']
+var EX_LIB = {
+  Calisthenics: ['Pull-Ups','Chin-Ups','Neutral Grip Pull-Ups','Dips','Push-Ups','Diamond Push-Ups','Pike Push-Ups','Bodyweight Squats','Lunges','Step-Ups','Planks','Leg Raises','Mountain Climbers','Australian Rows','Hollow Body Hold'],
+  Dumbbell:     ['Dumbbell Curls','Hammer Curls','Shoulder Press','Lateral Raises','Front Raises','Bent-Over Rows','Goblet Squats','Romanian Deadlifts','DB Lunges','Chest Press','Skull Crushers','Overhead Extensions','Arnold Press','Incline Curl','Concentration Curl','Farmers Carry','DB Shrug','Zottman Curl']
 };
 
 // ════════════════════════════════════════
@@ -74,12 +184,12 @@ function navTo(page,btn){
   document.querySelectorAll('.nav-item').forEach(function(b){b.classList.remove('active');});
   document.getElementById('page-'+page).classList.add('active');
   btn.classList.add('active');
-  if(page==='today') renderToday();
-  if(page==='log') renderLog();
-  if(page==='dashboard') renderDashboard();
+  if(page==='today')    renderToday();
+  if(page==='log')      renderLog();
+  if(page==='dashboard')renderDashboard();
   if(page==='calendar') renderCalendar();
-  if(page==='control') renderControl();
-  if(page==='journal') renderJournal();
+  if(page==='control')  renderControl();
+  if(page==='journal')  renderJournal();
   if(page==='settings') renderSettingsPage();
 }
 
@@ -194,7 +304,7 @@ function cycleCheck(date,itemId){
   var next=cur===null?'done':cur==='done'?'slipped':null;
   if(next===null) delete dailyChecks[date][itemId];
   else dailyChecks[date][itemId]=next;
-  S.save('sro_daily_checks',dailyChecks);
+  saveUserData();
   renderChecklist(date);
   document.getElementById('hero-score').textContent=calcScore(date);
 }
@@ -254,9 +364,10 @@ function renderLog(){
 
 function deleteLogEntry(type,id){
   if(!confirm('Delete this entry?')) return;
-  if(type==='workout'){workouts=workouts.filter(function(x){return x.id!==id;});S.save('sro_workouts',workouts);}
-  if(type==='weed'){weedLogs=weedLogs.filter(function(x){return x.id!==id;});S.save('sro_weed',weedLogs);}
-  if(type==='meal'){mealLogs=mealLogs.filter(function(x){return x.id!==id;});S.save('sro_meals',mealLogs);}
+  if(type==='workout') workouts   =workouts.filter(function(x){return x.id!==id;});
+  if(type==='weed')    weedLogs   =weedLogs.filter(function(x){return x.id!==id;});
+  if(type==='meal')    mealLogs   =mealLogs.filter(function(x){return x.id!==id;});
+  saveUserData();
   renderLog();renderToday();
 }
 
@@ -622,7 +733,7 @@ function calDayClick(dk){
 // RENDER CONTROL
 // ════════════════════════════════════════
 function renderMantra(){var el=document.getElementById('mantra-display');if(el)el.textContent=mantraText;}
-function editMantra(){var n=prompt('Edit your daily mantra:',mantraText);if(n!==null&&n.trim()){mantraText=n.trim();S.save('sro_mantra',mantraText);renderMantra();}}
+function editMantra(){var n=prompt('Edit your daily mantra:',mantraText);if(n!==null&&n.trim()){mantraText=n.trim();saveUserData();renderMantra();}}
 
 function renderControl(){
   renderMantra();
@@ -675,12 +786,12 @@ function cycleCtrl(date,catId){
   var next=cur===null?'win':cur==='win'?'aware':cur==='aware'?'loss':null;
   if(next===null) delete ctrlLogs[date][catId];
   else ctrlLogs[date][catId]=next;
-  S.save('sro_ctrl_logs',ctrlLogs);
+  saveUserData();
   renderControl();renderCalendar();
 }
 
-function toggleCtrlCat(i){ctrlCategories[i].active=!ctrlCategories[i].active;S.save('sro_ctrl_cats',ctrlCategories);renderControl();}
-function saveCtrlSettings(){S.save('sro_ctrl_cats',ctrlCategories);closeModal('modal-ctrl-settings');renderControl();}
+function toggleCtrlCat(i){ctrlCategories[i].active=!ctrlCategories[i].active;saveUserData();renderControl();}
+function saveCtrlSettings(){saveUserData();closeModal('modal-ctrl-settings');renderControl();}
 
 // ════════════════════════════════════════
 // JOURNAL
@@ -699,7 +810,7 @@ function saveReflection(){
   var next=document.getElementById('reflect-next').value.trim();
   if(!strong&&!slip){toast('Add at least one note first');return;}
   journalEntries.push({id:'j_'+Date.now(),date:date,strong:strong,slip:slip,pattern:pattern,next:next,keptWord:keptWordVal});
-  S.save('sro_journal',journalEntries);
+  saveUserData();
   document.getElementById('reflect-strong').value='';
   document.getElementById('reflect-slip').value='';
   document.getElementById('reflect-pattern').value='';
@@ -714,7 +825,7 @@ function saveReflection(){
 function deleteJournalEntry(id){
   if(!confirm('Delete this entry?')) return;
   journalEntries=journalEntries.filter(function(e){return e.id!==id;});
-  S.save('sro_journal',journalEntries);
+  saveUserData();
   renderJournal();
 }
 
@@ -771,7 +882,7 @@ function addCheckItem(){
   var label=inp?inp.value.trim():'';
   if(!label) return;
   checkItems.push({id:Date.now(),label:label,pts:10});
-  S.save('sro_checks',checkItems);
+  saveUserData();
   inp.value='';
   renderSettingsPage();
   renderChecklist(today());
@@ -781,7 +892,7 @@ function addCheckItem(){
 function deleteCheckItem(idx){
   if(!confirm('Remove "'+checkItems[idx].label+'"?')) return;
   checkItems.splice(idx,1);
-  S.save('sro_checks',checkItems);
+  saveUserData();
   renderSettingsPage();
   renderChecklist(today());
 }
@@ -791,7 +902,7 @@ function saveSettings(){
   settings.workoutWeekTarget=parseInt(document.getElementById('s-workout-target').value)||5;
   settings.sleepTarget=parseFloat(document.getElementById('s-sleep-target').value)||7;
   settings.startWeight=parseFloat(document.getElementById('s-start-weight').value)||162;
-  S.save('sro_settings',settings);
+  saveUserData();
   toast('Settings saved ✓');
 }
 
@@ -800,12 +911,12 @@ function clearDemoData(){
   var savedSettings=Object.assign({},settings);
   var savedCats=JSON.parse(JSON.stringify(ctrlCategories));
   var savedChecks=JSON.parse(JSON.stringify(checkItems));
-  ['sro_workouts','sro_weed','sro_meals','sro_water','sro_sleep','sro_weight','sro_ctrl_logs','sro_daily_checks','sro_journal'].forEach(function(k){localStorage.removeItem(k);});
-  settings=savedSettings;S.save('sro_settings',settings);
-  ctrlCategories=savedCats;S.save('sro_ctrl_cats',ctrlCategories);
-  checkItems=savedChecks;S.save('sro_checks',checkItems);
+  settings=savedSettings;
+  ctrlCategories=savedCats;
+  checkItems=savedChecks;
   workouts=[];weedLogs=[];mealLogs=[];waterLogs=[];sleepLogs=[];weightLog=[];
   ctrlLogs={};dailyChecks={};journalEntries=[];
+  saveUserData();
   toast('Cleared. Fresh start!');
   renderToday();
   renderSettingsPage();
@@ -838,7 +949,7 @@ function saveWorkout(){
     return {name:b.name,cat:b.cat,sets:b.sets.map(function(s){return {reps:parseInt(s.reps)||0,weight:parseFloat(s.weight)||0,rest:parseInt(s.rest)||60,rpe:parseInt(s.rpe)||7};})};
   });
   workouts.push({id:'w_'+Date.now(),date:date,type:type,startTime:t,duration:dur,energyBefore:selectedEnergyVal,notes:notes,exercises:cleanedExercises});
-  S.save('sro_workouts',workouts);
+  saveUserData();
   closeModal('modal-workout');
   document.getElementById('w-notes').value='';
   toast('Workout logged ✓');
@@ -847,7 +958,7 @@ function saveWorkout(){
 
 function saveWeed(){
   weedLogs.push({id:'weed_'+Date.now(),date:today(),time:document.getElementById('weed-time').value,method:document.getElementById('weed-method').value,amount:parseFloat(document.getElementById('weed-amount').value)||0.5,trigger:document.getElementById('weed-trigger').value});
-  S.save('sro_weed',weedLogs);
+  saveUserData();
   closeModal('modal-weed');
   document.getElementById('weed-amount').value='';
   toast('Weed session logged ✓');
@@ -856,7 +967,7 @@ function saveWeed(){
 
 function saveMeal(){
   mealLogs.push({id:'meal_'+Date.now(),date:today(),time:document.getElementById('meal-time').value,name:document.getElementById('meal-name').value||'Meal',quality:selectedMealQuality});
-  S.save('sro_meals',mealLogs);
+  saveUserData();
   closeModal('modal-meal');
   document.getElementById('meal-name').value='';
   toast('Meal logged ✓');
@@ -867,7 +978,7 @@ function saveWater(){
   var g=parseInt(document.getElementById('water-glasses').value)||0;
   waterLogs=waterLogs.filter(function(x){return x.date!==today();});
   waterLogs.push({date:today(),glasses:g});
-  S.save('sro_water',waterLogs);
+  saveUserData();
   closeModal('modal-water');
   document.getElementById('water-glasses').value='';
   toast('Water: '+g+' glasses ✓');
@@ -878,7 +989,7 @@ function saveSleep(){
   var q=document.getElementById('sleep-quality').value;
   sleepLogs=sleepLogs.filter(function(x){return x.date!==today();});
   sleepLogs.push({date:today(),hours:h,quality:q});
-  S.save('sro_sleep',sleepLogs);
+  saveUserData();
   closeModal('modal-sleep');
   document.getElementById('sleep-hours').value='';
   toast('Sleep: '+h+'hrs logged ✓');
@@ -887,7 +998,10 @@ function saveSleep(){
 
 function saveWeight(){
   var w=parseFloat(document.getElementById('weight-val').value)||0;
-  if(w){weightLog.push({date:today(),weight:w,notes:document.getElementById('weight-notes').value});S.save('sro_weight',weightLog);}
+  if(w){
+    weightLog.push({date:today(),weight:w,notes:document.getElementById('weight-notes').value});
+    saveUserData();
+  }
   closeModal('modal-weight');
   document.getElementById('weight-val').value='';
   toast('Weight logged ✓');
@@ -904,7 +1018,8 @@ function toast(msg){
 }
 
 // ════════════════════════════════════════
-// INIT
+// INIT — intentionally empty.
+// renderToday() and renderMantra() are called
+// by the auth state listener in index.html
+// AFTER Firestore data is loaded.
 // ════════════════════════════════════════
-renderToday();
-renderMantra();
