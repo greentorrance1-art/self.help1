@@ -655,78 +655,72 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 
-// ── Safety timeout ───
-var _authResolved = false;
-setTimeout(function() {
-  if (!_authResolved) {
-    console.warn("SRO: Auth timeout — add greentorrance1-art.github.io to Firebase Authorized Domains");
-    document.getElementById("loading-screen").style.display = "none";
-    document.getElementById("auth-screen").style.display = "flex";
-  }
-}, 8000);
-
-// ── Auth state listener — controls which screen is visible ───
-firebase.auth().onAuthStateChanged(function(user) {
-  _authResolved = true;
-  var loading   = document.getElementById('loading-screen');
-  var authScreen= document.getElementById('auth-screen');
-  var appWrapper= document.getElementById('app-wrapper');
-
+// ── Global reveal function ───────────────────────────────────
+function revealApp(user) {
+  var loading    = document.getElementById('loading-screen');
+  var authScreen = document.getElementById('auth-screen');
+  var appWrapper = document.getElementById('app-wrapper');
+  loading.style.display    = 'none';
+  authScreen.style.display = 'none';
+  appWrapper.classList.add('visible');
   if (user) {
-    authScreen.style.display = 'none';
-    loading.style.display    = 'flex'; // keep spinner while Firestore loads
-
-    // Personalized greeting: use email prefix
     var displayName = user.email.split('@')[0];
     var nameEl = document.getElementById('topbar-name');
     if (nameEl) nameEl.textContent = 'Hey, ' + displayName + ' 👋';
-
-    // Show email in Settings > Account
     var emailEl = document.getElementById('settings-email-display');
     if (emailEl) emailEl.textContent = 'Signed in as ' + user.email;
+  }
+  if (typeof renderToday  === 'function') renderToday();
+  if (typeof renderMantra === 'function') renderMantra();
+}
 
-    // Helper to reveal app regardless of what happens
-    function revealApp() {
-      loading.style.display = 'none';
-      authScreen.style.display = 'none';
-      appWrapper.classList.add('visible');
-      if (typeof renderToday  === 'function') renderToday();
-      if (typeof renderMantra === 'function') renderMantra();
-    }
+// ── Auth state listener ───────────────────────────────────────
+firebase.auth().onAuthStateChanged(function(user) {
+  var loading    = document.getElementById('loading-screen');
+  var authScreen = document.getElementById('auth-screen');
+  var appWrapper = document.getElementById('app-wrapper');
 
-    // Safety net: if Firestore takes too long or crashes, open app anyway
-    var _appRevealTimer = setTimeout(revealApp, 5000);
+  if (user) {
+    authScreen.style.display = 'none';
+    loading.style.display    = 'flex';
 
-    // Load Firestore data then reveal app
-    if (typeof loadUserData === 'function') {
-      try {
-        loadUserData(user.uid)
-          .then(function() {
-            clearTimeout(_appRevealTimer);
-            revealApp();
-          })
-          .catch(function(err) {
-            console.error('Firestore load error:', err);
-            clearTimeout(_appRevealTimer);
-            revealApp();
-          });
-      } catch(e) {
-        console.error('loadUserData threw:', e);
-        clearTimeout(_appRevealTimer);
-        revealApp();
+    // Hard fallback: open app after 4s no matter what
+    var revealTimer = setTimeout(function() {
+      console.warn('SRO: fallback reveal fired');
+      revealApp(user);
+    }, 4000);
+
+    function tryLoad() {
+      if (typeof loadUserData === 'function') {
+        try {
+          loadUserData(user.uid)
+            .then(function()  { clearTimeout(revealTimer); revealApp(user); })
+            .catch(function() { clearTimeout(revealTimer); revealApp(user); });
+        } catch(e) {
+          clearTimeout(revealTimer);
+          revealApp(user);
+        }
+      } else {
+        // app.js not parsed yet, wait 300ms and retry once
+        setTimeout(function() {
+          if (typeof loadUserData === 'function') {
+            loadUserData(user.uid)
+              .then(function()  { clearTimeout(revealTimer); revealApp(user); })
+              .catch(function() { clearTimeout(revealTimer); revealApp(user); });
+          } else {
+            clearTimeout(revealTimer);
+            revealApp(user);
+          }
+        }, 300);
       }
-    } else {
-      console.warn('loadUserData not defined — app.js may have a syntax error');
-      clearTimeout(_appRevealTimer);
-      revealApp();
     }
+    tryLoad();
+
   } else {
-    // Signed out — wipe app state if app.js has already run
     if (typeof resetAppState === 'function') resetAppState();
     appWrapper.classList.remove('visible');
     loading.style.display = 'none';
     authScreen.style.display = 'flex';
-    // Re-enable auth button
     var btn = document.getElementById('auth-submit-btn');
     if (btn) { btn.disabled = false; btn.textContent = 'Log In'; }
     setAuthMode('login');
