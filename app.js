@@ -1024,3 +1024,54 @@ function toast(msg){
 // by the auth state listener in index.html
 // AFTER Firestore data is loaded.
 // ════════════════════════════════════════
+
+// ════════════════════════════════════════
+// AUTH CONTROLLER — runs after all app functions are defined
+// ════════════════════════════════════════
+function revealApp(user) {
+  var loading    = document.getElementById('loading-screen');
+  var authScreen = document.getElementById('auth-screen');
+  var appWrapper = document.getElementById('app-wrapper');
+  if (loading)    loading.style.display    = 'none';
+  if (authScreen) authScreen.style.display = 'none';
+  if (appWrapper) appWrapper.classList.add('visible');
+  if (user) {
+    var displayName = user.email.split('@')[0];
+    var nameEl = document.getElementById('topbar-name');
+    if (nameEl) nameEl.textContent = 'Hey, ' + displayName + ' \u{1F44B}';
+    var emailEl = document.getElementById('settings-email-display');
+    if (emailEl) emailEl.textContent = 'Signed in as ' + user.email;
+  }
+  if (typeof renderToday  === 'function') renderToday();
+  if (typeof renderMantra === 'function') renderMantra();
+}
+
+firebase.auth().onAuthStateChanged(function(user) {
+  var loading    = document.getElementById('loading-screen');
+  var authScreen = document.getElementById('auth-screen');
+  var appWrapper = document.getElementById('app-wrapper');
+
+  if (user) {
+    if (authScreen) authScreen.style.display = 'none';
+    if (loading)    loading.style.display    = 'flex';
+
+    var revealTimer = setTimeout(function() { revealApp(user); }, 4000);
+
+    try {
+      loadUserData(user.uid)
+        .then(function()  { clearTimeout(revealTimer); revealApp(user); })
+        .catch(function() { clearTimeout(revealTimer); revealApp(user); });
+    } catch(e) {
+      clearTimeout(revealTimer);
+      revealApp(user);
+    }
+  } else {
+    if (typeof resetAppState === 'function') resetAppState();
+    if (appWrapper) appWrapper.classList.remove('visible');
+    if (loading)    loading.style.display = 'none';
+    if (authScreen) authScreen.style.display = 'flex';
+    var btn = document.getElementById('auth-submit-btn');
+    if (btn) { btn.disabled = false; btn.textContent = 'Log In'; }
+    if (typeof setAuthMode === 'function') setAuthMode('login');
+  }
+});
