@@ -773,11 +773,24 @@ function renderControl(){
   var tl=document.getElementById('ctrl-toggle-list');
   if(tl){
     tl.innerHTML=ctrlCategories.map(function(c,i){
-      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--gray-2)">'
-        +'<div style="display:flex;align-items:center;gap:10px;font-size:15px;font-weight:500">'+c.icon+' '+c.label+'</div>'
-        +'<button onclick="toggleCtrlCat('+i+')" style="padding:6px 14px;border-radius:99px;border:none;font-weight:700;font-size:13px;cursor:pointer;background:'+(c.active?'var(--green)':'var(--gray-3)')+';color:'+(c.active?'#fff':'var(--gray-6)')+'">'+( c.active?'On':'Off')+'</button>'
+      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--gray-2);gap:8px">'
+        +'<div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0">'
+          +'<input type="text" value="'+c.icon+'" onchange="updateCtrlCatIcon('+i+',this.value)" style="width:36px;text-align:center;font-size:18px;border:1px solid var(--gray-2);border-radius:6px;padding:2px 4px;background:transparent;cursor:pointer" title="Click to change emoji">'
+          +'<input type="text" value="'+c.label+'" onchange="updateCtrlCatLabel('+i+',this.value)" style="flex:1;font-size:14px;font-weight:500;border:1px solid var(--gray-2);border-radius:6px;padding:4px 8px;background:transparent;color:var(--ink)" placeholder="Category name">'
+        +'</div>'
+        +'<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">'
+          +'<button onclick="toggleCtrlCat('+i+')" style="padding:5px 12px;border-radius:99px;border:none;font-weight:700;font-size:13px;cursor:pointer;background:'+(c.active?'var(--green)':'var(--gray-3)')+';color:'+(c.active?'#fff':'var(--gray-6)')+'">'+( c.active?'On':'Off')+'</button>'
+          +'<button onclick="deleteCtrlCat('+i+')" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--gray-4);padding:0 2px;line-height:1" title="Delete">×</button>'
+        +'</div>'
         +'</div>';
-    }).join('');
+    }).join('')
+    +'<div style="padding:14px 0 4px">'
+      +'<div style="display:flex;gap:8px">'
+        +'<input type="text" id="new-ctrl-cat-emoji" placeholder="🔒" style="width:48px;text-align:center;font-size:18px;border:1px solid var(--gray-2);border-radius:8px;padding:6px;background:transparent">'
+        +'<input type="text" id="new-ctrl-cat-label" placeholder="New category name..." style="flex:1;font-size:14px;border:1px solid var(--gray-2);border-radius:8px;padding:6px 10px;background:transparent;color:var(--ink)">'
+        +'<button onclick="addCtrlCat()" style="padding:6px 14px;border-radius:8px;border:none;background:var(--ink);color:#fff;font-weight:700;font-size:13px;cursor:pointer">Add</button>'
+      +'</div>'
+    +'</div>';
   }
 }
 
@@ -792,6 +805,10 @@ function cycleCtrl(date,catId){
 }
 
 function toggleCtrlCat(i){ctrlCategories[i].active=!ctrlCategories[i].active;saveUserData();renderControl();}
+function updateCtrlCatLabel(i,val){var v=val.trim();if(v)ctrlCategories[i].label=v;saveUserData();}
+function updateCtrlCatIcon(i,val){var v=val.trim();if(v)ctrlCategories[i].icon=v;saveUserData();}
+function deleteCtrlCat(i){if(!confirm('Delete "'+ctrlCategories[i].label+'"?'))return;ctrlCategories.splice(i,1);saveUserData();renderControl();}
+function addCtrlCat(){var icon=document.getElementById('new-ctrl-cat-emoji').value.trim()||'⭐';var label=document.getElementById('new-ctrl-cat-label').value.trim();if(!label){toast('Enter a category name first');return;}var id='cat_'+Date.now();ctrlCategories.push({id:id,label:label,icon:icon,active:true});saveUserData();renderControl();}
 function saveCtrlSettings(){saveUserData();closeModal('modal-ctrl-settings');renderControl();}
 
 // ════════════════════════════════════════
